@@ -1,13 +1,76 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>sing-up</ion-title>
-  </ion-toolbar>
-</ion-header>
+<app-header title="Registro"></app-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">sing-up</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+
+    <div class="d-flex-center">
+
+        <form [formGroup]="form" class="auth-form" (ngSubmit)="submit()" (keypress.enter)="submit()">
+
+            <app-logo></app-logo>
+
+            <!--Para el campo nombre-->
+            <app-custom-input 
+            autocomplete="name"
+            icon="person-outline"
+            [control]="form.controls.name"
+            type="text"
+            label="Nombre y Apellido"
+            ></app-custom-input>
+
+            <div class="validators" *ngIf="form.controls.name.errors && form.controls.name.touched">
+                <div *ngIf="form.controls.name.errors?.['required']">El correo es requerido</div>
+                <div *ngIf="form.controls.name.errors?.['minlenght']">El nombre y apellido debe contener al menos 7 caracteres </div>
+            </div>
+
+            <!--Para el campo Email-->
+            <app-custom-input 
+            autocomplete="email"
+            icon="mail-outline"
+            [control]="form.controls.email"
+            type="email"
+            label="Correo"
+            ></app-custom-input>
+
+            <div class="validators" *ngIf="form.controls.email.errors && form.controls.email.touched">
+                <div *ngIf="form.controls.email.errors?.['required']">El correo es requerido</div>
+                <div *ngIf="form.controls.email.errors?.['email']">Ingrese un correo valido</div>
+            </div>
+
+            <!--Para el campo Password-->
+            <app-custom-input 
+            [control]="form.controls.password"
+            icon="lock-closed-outline"
+            type="password"
+            label="Contraseña"
+            ></app-custom-input>
+
+            <div class="validators" *ngIf="form.controls.password.errors && form.controls.password.touched">
+                <div *ngIf="form.controls.password.errors?.['required']">La contraseña es requerida</div>
+            </div>
+
+            <!--Para el campo rol-->
+            
+            <select 
+            [formControl]="form.controls.rol" 
+            class="styled-select">
+              <option value="">Seleccione un rol</option>
+              <option value="Administrador">Administrador</option>
+              <option value="Topógrafo">Topógrafo</option>
+            </select>
+            
+            <div class="validators" *ngIf="form.controls.rol.errors && form.controls.rol.touched">
+              <div *ngIf="form.controls.rol.errors?.['required']">El rol es requerido</div>
+            </div>
+          
+
+            <!--Para el boton Registrarse-->
+            <ion-button color="dark"  expand="block" mode="ios" class="submit" type="submit" [disabled]="form.invalid">
+              Registrate
+              <ion-icon slot="end" name="person-add-outline"></ion-icon>
+            </ion-button>
+
+        </form>
+
+    </div>
+
 </ion-content>
