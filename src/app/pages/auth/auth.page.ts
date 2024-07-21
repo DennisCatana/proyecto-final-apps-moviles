@@ -30,7 +30,48 @@ export class AuthPage implements OnInit {
       await loading.present();
 
       this.firebaseSvc.signIn(this.form.value as User).then(res => {
-        console.log(res)
+
+        this.getUserInfo(res.user.uid)
+
+      }).catch(error => {
+        console.log(error)
+
+        this.utilSvc.presentToast({
+          message: 'Contraseña o usuario incorrecto, revise sus credenciales',
+          duration: 2500,
+          color: 'danger',
+          position: 'middle',
+          icon: 'alert-circle-outline'
+        })
+
+      }).finally(() => {
+        loading.dismiss();
+      })
+    }
+  }
+
+  async getUserInfo(uid: string) {
+    if (this.form.valid) {
+
+      const loading = await this.utilSvc.loading();
+      await loading.present();
+
+      let path = `users/${uid}`
+
+      this.firebaseSvc.getDocument(path).then((user: User) => {
+
+        this.utilSvc.saveInLocalStorage('user', user);
+        this.utilSvc.routerLink('/main/home')
+        this.form.reset();
+
+        this.utilSvc.presentToast({
+          message:  `Bienenido ${user.name}`,
+          duration: 1500,
+          color: 'medium',
+          position: 'middle',
+          icon: 'person-circle-outline'
+        })
+
 
       }).catch(error => {
         console.log(error)

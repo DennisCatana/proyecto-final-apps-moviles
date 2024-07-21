@@ -68,13 +68,12 @@ export class SingUpPage implements OnInit {
       await loading.present();
 
       let path = `users/${uid}`
-      //delete this.form.value.password;
+      delete this.form.value.password;
 
       this.firebaseSvc.setDocument(path, this.form.value).then(async res => {
 
         this.utilSvc.saveInLocalStorage('user', this.form.value);
-        this.utilSvc.routerLink('/main/home')
-        //this.utilSvc.routerLink('/auth') ----------------------------------------------->
+        this.utilSvc.routerLink('/auth') 
         this.form.reset();
 
 
