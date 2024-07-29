@@ -9,8 +9,16 @@ const routes: Routes = [
     component: MainPage,
     children: [
       {
-        path: 'home',
-        loadChildren: () => import('./home/home.module').then(m => m.HomePageModule)
+        path: 'usuarios',
+        loadChildren: () => import('./usuarios/usuarios.module').then( m => m.UsuariosPageModule)
+      },
+      {
+        path: 'ubicacion',
+        loadChildren: () => import('./ubicacion/ubicacion.module').then( m => m.UbicacionPageModule)
+      },
+      {
+        path: 'terrenos',
+        loadChildren: () => import('./terrenos/terrenos.module').then( m => m.TerrenosPageModule)
       },
       {
         path: 'profile',

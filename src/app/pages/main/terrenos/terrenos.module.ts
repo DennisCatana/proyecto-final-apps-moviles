@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { ProfilePageRoutingModule } from './profile-routing.module';
+import { TerrenosPageRoutingModule } from './terrenos-routing.module';
 
-import { ProfilePage } from './profile.page';
+import { TerrenosPage } from './terrenos.page';
 import { SharedModule } from 'src/app/shared/shared.module';
 
 @NgModule({
@@ -14,9 +14,9 @@ import { SharedModule } from 'src/app/shared/shared.module';
     CommonModule,
     FormsModule,
     IonicModule,
-    ProfilePageRoutingModule,
+    TerrenosPageRoutingModule,
     SharedModule
   ],
-  declarations: [ProfilePage]
+  declarations: [TerrenosPage]
 })
-export class ProfilePageModule {}
+export class TerrenosPageModule {}
