@@ -34,9 +34,4 @@ export class GeolocationService {
   getMarkers(): Observable<any[]> {
     return this.firestore.collection('markers').valueChanges();
   }
-
-  async getLocation(uid: string): Promise<any> {
-    const doc = await this.firestore.collection('locations').doc(uid).get().toPromise();
-    return doc.data();
-  }
 }
