@@ -68,4 +68,16 @@ export class TerrenosPage implements OnInit {
     }
   }
 
+  clearMap() {
+    if (this.polygon) {
+      this.polygon.setMap(null); // Eliminar el polígono del mapa
+      this.polygon = null; // Restablecer la referencia al polígono
+    }
+    this.polygonPaths = []; // Limpiar los caminos del polígono
+    this.Varea = null; // Restablecer el valor del área
+    this.Vperimetro = null; // Restablecer el valor del perímetro
+    console.log('Mapa limpiado.');
+  }
+
+
 }
