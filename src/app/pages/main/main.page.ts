@@ -12,9 +12,9 @@ import { UtilsService } from 'src/app/services/utils.service';
 export class MainPage implements OnInit {
 
   pages = [
+    {title: 'Perfil', url: '/main/profile', icon: 'person-outline'},
     {title: 'Ubicacion', url: '/main/ubicacion', icon: 'location-outline'},
     {title: 'Terrenos', url: '/main/terrenos', icon: 'globe-outline'},
-    {title: 'Perfil', url: '/main/profile', icon: 'person-outline'},
     {title: 'Usuarios', url: '/main/usuarios', icon: 'people-outline'}
   ]
 
