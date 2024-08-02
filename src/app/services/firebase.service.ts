@@ -1,9 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { User } from '../models/user.model';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { getFirestore, setDoc, doc, getDoc } from '@angular/fire/firestore';
+import { getFirestore, setDoc, doc, getDoc, updateDoc, deleteDoc, collection } from 'firebase/firestore';
 import { UtilsService } from './utils.service';
 
 @Injectable({
@@ -15,7 +15,7 @@ export class FirebaseService {
   firestore = inject(AngularFirestore);
   utilsSvc = inject(UtilsService);
 
-  //================================ Autenticación =====
+  //================================ Autenticación =======================================
 
   //===== Acceder =====
 
@@ -57,4 +57,21 @@ export class FirebaseService {
   async getDocument(path: string) {
     return (await getDoc(doc(getFirestore(), path))).data();
   }
+
+  //==================== Gestión de Usuarios =============================
+
+  //===== Obtener todos los usuarios =====
+ /* getUsers() {
+    return this.firestore.collection('users').snapshotChanges();
+  }
+
+  //===== Actualizar usuario en Firestore =====
+  updateUserInFirestore(userId: string, user: any) {
+    return updateDoc(doc(this.firestore.firestore, `users/${userId}`), user);
+  }
+
+  //===== Eliminar usuario =====
+  deleteUser(userId: string) {
+    return deleteDoc(doc(this.firestore.firestore, `users/${userId}`));
+  }*/
 }
