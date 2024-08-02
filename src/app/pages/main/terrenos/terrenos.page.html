@@ -12,6 +12,9 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+    <div id="map" style="height: 80%; width: 100%;"></div>
+  <ion-button expand="full" (click)="calculateAreaAndPerimeter()">Calcular Área y Perímetro</ion-button>
 
-
+  <p *ngIf="Varea !== null">Área: {{ Varea | number:'1.0-2' }} m²</p>
+  <p *ngIf="Vperimetro !== null">Perímetro: {{ Vperimetro | number:'1.0-2' }} m</p>
 </ion-content>
