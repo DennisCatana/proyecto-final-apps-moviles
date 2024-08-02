@@ -18,8 +18,8 @@ export class TerrenosPage implements OnInit {
 
   initMap() {
     const mapOptions: google.maps.MapOptions = {
-      center: { lat: -34.397, lng: 150.644 },
-      zoom: 8,
+      center: { lat: -0.187442, lng: -78.501878 },
+      zoom: 20,
     };
     this.map = new google.maps.Map(document.getElementById('map') as HTMLElement, mapOptions);
     
