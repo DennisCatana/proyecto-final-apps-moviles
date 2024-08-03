@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { GeolocationService } from 'src/app/services/geolocation.service';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { Geolocation, GeolocationPosition, PositionOptions } from '@capacitor/geolocation';
+import { Geolocation, PositionOptions, GeolocationPosition } from '@capacitor/geolocation';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -14,8 +14,6 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
   userMarker: google.maps.Marker | null = null;
   locationMarkers: { [key: string]: google.maps.Marker } = {};
   markerMarkers: { [key: string]: google.maps.Marker } = {};
-  updateInterval: any;
-  firstLoad = true;
   locationSubscription: Subscription;
   markerSubscription: Subscription;
   watchId: any;
@@ -35,9 +33,6 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
     if (this.locationSubscription) {
       this.locationSubscription.unsubscribe();
     }
@@ -71,7 +66,7 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
             position: new google.maps.LatLng(location.lat, location.lng),
             map: this.map,
             icon: {
-              url: './assets/icon/usuario.png',
+              url: location.uid === this.auth.currentUser?.then(user => user?.uid) ? './assets/icon/mi.png' : './assets/icon/usuario.png',
               scaledSize: new google.maps.Size(30, 30)
             }
           });
@@ -82,12 +77,9 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
         }
       });
 
-      if (this.firstLoad && Object.keys(this.locationMarkers).length) {
-        const bounds = new google.maps.LatLngBounds();
-        Object.values(this.locationMarkers).forEach(marker => bounds.extend(marker.getPosition() as google.maps.LatLng));
-        this.map.fitBounds(bounds);
-        this.firstLoad = false;
-      }
+      const bounds = new google.maps.LatLngBounds();
+      Object.values(this.locationMarkers).forEach(marker => bounds.extend(marker.getPosition() as google.maps.LatLng));
+      this.map.fitBounds(bounds);
     });
   }
 
@@ -118,32 +110,33 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startAutoUpdateLocation() {
-    this.updateInterval = setInterval(() => {
-      this.auth.currentUser.then(user => {
-        if (user) {
-          Geolocation.getCurrentPosition({ enableHighAccuracy: true }).then(position => {
-            const { latitude, longitude } = position.coords;
-            this.geolocationService.updateLocation(user.uid, latitude, longitude, user.displayName);
-          }).catch(error => {
-            console.error('Error getting current position', error);
+    this.auth.currentUser.then(user => {
+      if (user) {
+        this.watchId = Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
+          if (err) {
+            console.error('Error watching position', err);
+            return;
+          }
+          this.updateLocation(position);
+        });
+
+        setInterval(() => {
+          this.auth.currentUser.then(currentUser => {
+            if (currentUser) {
+              this.geolocationService.updateLocation(currentUser.uid, this.userMarker.getPosition().lat(), this.userMarker.getPosition().lng(), currentUser.displayName);
+            }
           });
-        }
-      });
-    }, 10000); // Update every 10 seconds
+        }, 10000); // Update every 10 seconds
+      }
+    });
   }
 
   async updateLocation(position: GeolocationPosition) {
     const user = await this.auth.currentUser;
     if (user) {
       const { latitude, longitude, accuracy } = position.coords;
-      if (accuracy < 50) { // Only update if accuracy is less than 50 meters
+      if (accuracy < 50) {
         this.geolocationService.updateLocation(user.uid, latitude, longitude, user.displayName);
-
-        if (this.firstLoad) {
-          this.map.setCenter(new google.maps.LatLng(latitude, longitude));
-          this.map.setZoom(15);
-          this.firstLoad = false;
-        }
 
         if (this.userMarker) {
           this.userMarker.setPosition(new google.maps.LatLng(latitude, longitude));
@@ -153,12 +146,10 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
             position: new google.maps.LatLng(latitude, longitude),
             map: this.map,
             icon: {
-              url: './assets/icon/usuario.png',
+              url: './assets/icon/mi-ubicacion.png',
               scaledSize: new google.maps.Size(30, 30)
             }
           });
-
-          this.addInfoWindow(this.userMarker, `${user.displayName} (Ubicación en tiempo real)`);
         }
       }
     }
@@ -170,52 +161,23 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
       try {
         const position = await this.getCurrentPosition();
 
-        // Check if the user already has a marker
-        if (this.markerMarkers[user.uid]) {
-          // Update the existing marker position
-          this.markerMarkers[user.uid].setPosition(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-          this.geolocationService.addMarker(user.uid, position.coords.latitude, position.coords.longitude, user.displayName); // Changed here
-        } else {
-          // Add a new marker
-          const marker = new google.maps.Marker({
-            position: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
-            map: this.map,
-            icon: {
-              url: './assets/icon/marcador.png',
-              scaledSize: new google.maps.Size(30, 30)
-            }
-          });
+        const marker = new google.maps.Marker({
+          position: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+          map: this.map,
+          icon: {
+            url: './assets/icon/marcador.png',
+            scaledSize: new google.maps.Size(30, 30)
+          }
+        });
 
-          this.addInfoWindow(marker, `${user.displayName} (Marcador)`);
+        this.addInfoWindow(marker, `${user.displayName} (Marcador)`);
 
-          this.markerMarkers[user.uid] = marker;
+        this.markerMarkers[user.uid] = marker;
 
-          this.geolocationService.addMarker(user.uid, position.coords.latitude, position.coords.longitude, user.displayName);
-        }
+        this.geolocationService.addMarker(user.uid, position.coords.latitude, position.coords.longitude, user.displayName);
       } catch (error) {
         console.error('Error adding marker', error);
-        alert('Error adding marker: ' + error.message);
       }
-    }
-  }
-
-  async getCurrentPosition(): Promise<GeolocationPosition> {
-    try {
-      return await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 5000 });
-    } catch (error) {
-      console.error('Error getting current position', error);
-      throw error;
-    }
-  }
-
-  async centerMapOnCurrentLocation() {
-    try {
-      const position = await this.getCurrentPosition();
-      this.updateLocation(position);
-      this.map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-      this.map.setZoom(15);
-    } catch (error) {
-      console.error('Error centering map on current location', error);
     }
   }
 
@@ -226,6 +188,48 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
     marker.addListener('click', () => {
       infoWindow.open(this.map, marker);
+    });
+  }
+
+  async getCurrentPosition(): Promise<GeolocationPosition> {
+    try {
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 20000, // Aumenta el tiempo de espera
+        maximumAge: 0 // No usa una posición en caché
+      });
+      return position;
+    } catch (error) {
+      console.error('Error getting current position', error);
+      throw error;
+    }
+  }
+
+  centerMapOnCurrentLocation() {
+    this.auth.currentUser.then(user => {
+      if (user) {
+        this.getCurrentPosition().then(position => {
+          const { latitude, longitude } = position.coords;
+          this.map.setCenter(new google.maps.LatLng(latitude, longitude));
+          this.map.setZoom(15);
+
+          if (this.userMarker) {
+            this.userMarker.setPosition(new google.maps.LatLng(latitude, longitude));
+            this.userMarker.setVisible(true);
+          } else {
+            this.userMarker = new google.maps.Marker({
+              position: new google.maps.LatLng(latitude, longitude),
+              map: this.map,
+              icon: {
+                url: './assets/icon/mi.png',
+                scaledSize: new google.maps.Size(30, 30)
+              }
+            });
+          }
+        }).catch(error => {
+          console.error('Error centering map on current location', error);
+        });
+      }
     });
   }
 }
