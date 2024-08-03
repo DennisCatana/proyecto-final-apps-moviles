@@ -1,0 +1,23 @@
+ion-content {
+    display: flex;
+    flex-direction: column; /* Asegura que los elementos se alineen verticalmente */
+    justify-content: center; /* Centra horizontalmente el contenido */
+    align-items: center; /* Centra verticalmente el contenido */
+    text-align: center; /* Centra el texto dentro de los elementos */
+  }
+  
+  h4 {
+    margin-top: 5px;
+    font-weight: bold;
+  }
+  
+  h6 {
+    margin-top: 5px;
+    font-weight: bold;
+  }
+  
+  .avatar-icon {
+    font-size: 100px; /* Ajusta el tamaño del ícono si es necesario */
+    margin-bottom: 20px; /* Espacio debajo del ícono */
+  }
+  
