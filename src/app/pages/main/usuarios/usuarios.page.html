@@ -14,9 +14,9 @@
     <ion-grid>
         <ion-row>
             <ion-col size="12" size-md="6" size-lg="4" *ngFor="let user of users$ | async">
-                <ion-card>
-                    <ion-icon class="avatar-icon" name="person-circle-outline"></ion-icon>
+                <ion-card class="tarjetaP">
                     <ion-card-header>
+                        <ion-icon class="avatar-icon" name="person-circle-outline" ></ion-icon>
                         <ion-card-title>{{ user.name }}</ion-card-title>
                         <ion-card-subtitle>{{ user.rol }}</ion-card-subtitle>
                     </ion-card-header>
@@ -30,7 +30,7 @@
                         (ionChange)="toggleUserActivation(user.uid, user.active)"
                         ></ion-toggle> -->
 
-                        <ion-icon
+                        <ion-icon class="basurero"
                             name="trash"
                             slot="end"
                             color="danger"

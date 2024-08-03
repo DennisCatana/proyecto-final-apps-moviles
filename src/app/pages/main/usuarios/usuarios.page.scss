@@ -1,0 +1,28 @@
+ion-card-header {
+    display: flex;
+    align-items: center; /* Centra verticalmente el contenido en el encabezado */
+    justify-content: center; /* Centra horizontalmente el contenido en el encabezado */
+    flex-direction: column; /* Organiza el contenido en columna */
+  }
+  
+  .avatar-icon {
+    font-size: 100px; /* Tamaño del icono */
+  }
+  
+  ion-card-content {
+    display: flex;
+    flex-direction: column; /* Organiza el contenido en columna */
+    align-items: center; /* Centra el contenido horizontalmente */
+    justify-content: center; /* Centra el contenido verticalmente */
+  }
+  
+  .basurero {
+    font-size: 25px; /* Tamaño del icono de la papelera */
+    margin-top: 16px; /* Espacio superior del icono de la papelera */
+  }
+
+  .tarjetaP{
+    /*background-color: rgb(0, 0, 0);*/
+    border-radius: 20px;
+}
+  
