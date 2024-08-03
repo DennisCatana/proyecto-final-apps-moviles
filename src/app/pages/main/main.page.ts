@@ -12,10 +12,10 @@ import { UtilsService } from 'src/app/services/utils.service';
 export class MainPage implements OnInit {
 
   pages = [
-    {title: 'Perfil', url: '/main/profile', icon: 'person-outline'},
-    {title: 'Ubicacion', url: '/main/ubicacion', icon: 'location-outline'},
-    {title: 'Terrenos', url: '/main/terrenos', icon: 'globe-outline'},
-    {title: 'Usuarios', url: '/main/usuarios', icon: 'people-outline'}
+    { title: 'Perfil', url: '/main/profile', icon: 'person-outline' },
+    { title: 'Ubicacion', url: '/main/ubicacion', icon: 'location-outline' },
+    { title: 'Terrenos', url: '/main/terrenos', icon: 'globe-outline' },
+    { title: 'Usuarios', url: '/main/usuarios', icon: 'people-outline' }
   ]
 
   router = inject(Router);
@@ -24,13 +24,25 @@ export class MainPage implements OnInit {
   currentPath: string = '';
 
   ngOnInit() {
+
+    this.filterPagesByRole();
+
     this.router.events.subscribe((event: any) => {
       if (event?.url) this.currentPath = event.url;
     })
   }
 
-  user(): User{
+
+  user(): User {
     return this.utilsSvc.getFromLocalStorage('user');
+  }
+
+  // Filtra las páginas según el rol del usuario
+  filterPagesByRole() {
+    const user = this.user();
+    if (user?.rol === 'Topógrafo') {
+      this.pages = this.pages.filter(page => page.title !== 'Usuarios');
+    }
   }
 
   //===== Cerrar Sesión =====
