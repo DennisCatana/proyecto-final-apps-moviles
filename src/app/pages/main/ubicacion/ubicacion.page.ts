@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { GeolocationService } from 'src/app/services/geolocation.service';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { Geolocation, PositionOptions, GeolocationPosition } from '@capacitor/geolocation';
+import { Geolocation, GeolocationPosition } from '@capacitor/geolocation';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -122,7 +122,7 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
         setInterval(() => {
           this.auth.currentUser.then(currentUser => {
-            if (currentUser) {
+            if (currentUser && this.userMarker) {
               this.geolocationService.updateLocation(currentUser.uid, this.userMarker.getPosition().lat(), this.userMarker.getPosition().lng(), currentUser.displayName);
             }
           });
@@ -146,7 +146,7 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
             position: new google.maps.LatLng(latitude, longitude),
             map: this.map,
             icon: {
-              url: './assets/icon/mi-ubicacion.png',
+              url: './assets/icon/mi.png',
               scaledSize: new google.maps.Size(30, 30)
             }
           });
@@ -172,9 +172,16 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
         this.addInfoWindow(marker, `${user.displayName} (Marcador)`);
 
-        this.markerMarkers[user.uid] = marker;
+        // Guardar el marcador en la base de datos
+        await this.geolocationService.addMarker(user.uid, position.coords.latitude, position.coords.longitude, user.displayName);
 
-        this.geolocationService.addMarker(user.uid, position.coords.latitude, position.coords.longitude, user.displayName);
+        // Actualizar el marcador en el mapa
+        if (this.markerMarkers[user.uid]) {
+          this.markerMarkers[user.uid].setPosition(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+        } else {
+          this.markerMarkers[user.uid] = marker;
+        }
+
       } catch (error) {
         console.error('Error adding marker', error);
       }
