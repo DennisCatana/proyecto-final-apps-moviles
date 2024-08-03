@@ -5,6 +5,8 @@ import { User } from '../models/user.model';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { getFirestore, setDoc, doc, getDoc, updateDoc, deleteDoc, collection } from 'firebase/firestore';
 import { UtilsService } from './utils.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -61,17 +63,17 @@ export class FirebaseService {
   //==================== Gestión de Usuarios =============================
 
   //===== Obtener todos los usuarios =====
- /* getUsers() {
-    return this.firestore.collection('users').snapshotChanges();
+  getUsers(): Observable<any[]> {
+    return this.firestore.collection('users').valueChanges().pipe(
+      map(users => users.sort((a: any, b: any) => a.name.localeCompare(b.name)))
+    );
   }
 
-  //===== Actualizar usuario en Firestore =====
-  updateUserInFirestore(userId: string, user: any) {
-    return updateDoc(doc(this.firestore.firestore, `users/${userId}`), user);
+  deleteUser(uid: string): Promise<void> {
+    return this.firestore.collection('users').doc(uid).delete();
   }
 
-  //===== Eliminar usuario =====
-  deleteUser(userId: string) {
-    return deleteDoc(doc(this.firestore.firestore, `users/${userId}`));
+  /*toggleUserActivation(uid: string, isActive: boolean): Promise<void> {
+    return this.firestore.collection('users').doc(uid).update({ active: isActive });
   }*/
 }
