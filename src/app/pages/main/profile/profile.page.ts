@@ -21,4 +21,8 @@ export class ProfilePage implements OnInit {
     return this.utilsSvc.getFromLocalStorage('user');
   }
 
+  async takeImage () {
+    //const dataURL = (await this.utilsSvc.takePicture('Imagen del Perfil')).dataURL
+  }
+
 }
