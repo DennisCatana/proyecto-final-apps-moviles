@@ -54,19 +54,21 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   trackLocations() {
-    this.locationSubscription = this.geolocationService.getLocations().subscribe(locations => {
+    this.locationSubscription = this.geolocationService.getLocations().subscribe(async locations => {
+      const currentUser = await this.auth.currentUser;
+      const currentUserId = currentUser?.uid;
+
       locations.forEach(location => {
         const infoContent = `${location.name} (Ubicación en tiempo real)`;
 
         if (this.locationMarkers[location.uid]) {
           this.locationMarkers[location.uid].setPosition(new google.maps.LatLng(location.lat, location.lng));
-          this.addInfoWindow(this.locationMarkers[location.uid], infoContent);
         } else {
           const marker = new google.maps.Marker({
             position: new google.maps.LatLng(location.lat, location.lng),
             map: this.map,
             icon: {
-              url: location.uid === this.auth.currentUser?.then(user => user?.uid) ? './assets/icon/mi.png' : './assets/icon/usuario.png',
+              url: location.uid === currentUserId ? './assets/icon/mi.png' : './assets/icon/usuario.png',
               scaledSize: new google.maps.Size(30, 30)
             }
           });
@@ -90,7 +92,6 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
         if (this.markerMarkers[markerData.uid]) {
           this.markerMarkers[markerData.uid].setPosition(new google.maps.LatLng(markerData.lat, markerData.lng));
-          this.addInfoWindow(this.markerMarkers[markerData.uid], infoContent);
         } else {
           const marker = new google.maps.Marker({
             position: new google.maps.LatLng(markerData.lat, markerData.lng),
@@ -181,10 +182,28 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.markerMarkers[user.uid] = marker;
         }
-
       } catch (error) {
-        console.error('Error adding marker', error);
+        console.error('Error getting location', error);
       }
+    }
+  }
+
+  getCurrentPosition(): Promise<GeolocationPosition> {
+    return Geolocation.getCurrentPosition({ 
+      enableHighAccuracy: true,
+      maximumAge: 3000, // 3 segundos de caché
+      timeout: 5000 // 5 segundos de tiempo de espera
+    });
+  }
+
+  async centerMapOnCurrentLocation() {
+    try {
+      const position = await this.getCurrentPosition();
+      const latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+      this.map.setCenter(latLng);
+      this.map.setZoom(15);
+    } catch (error) {
+      console.error('Error centering map on current location', error);
     }
   }
 
@@ -195,48 +214,6 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
     marker.addListener('click', () => {
       infoWindow.open(this.map, marker);
-    });
-  }
-
-  async getCurrentPosition(): Promise<GeolocationPosition> {
-    try {
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 20000, // Aumenta el tiempo de espera
-        maximumAge: 0 // No usa una posición en caché
-      });
-      return position;
-    } catch (error) {
-      console.error('Error getting current position', error);
-      throw error;
-    }
-  }
-
-  centerMapOnCurrentLocation() {
-    this.auth.currentUser.then(user => {
-      if (user) {
-        this.getCurrentPosition().then(position => {
-          const { latitude, longitude } = position.coords;
-          this.map.setCenter(new google.maps.LatLng(latitude, longitude));
-          this.map.setZoom(15);
-
-          if (this.userMarker) {
-            this.userMarker.setPosition(new google.maps.LatLng(latitude, longitude));
-            this.userMarker.setVisible(true);
-          } else {
-            this.userMarker = new google.maps.Marker({
-              position: new google.maps.LatLng(latitude, longitude),
-              map: this.map,
-              icon: {
-                url: './assets/icon/mi.png',
-                scaledSize: new google.maps.Size(30, 30)
-              }
-            });
-          }
-        }).catch(error => {
-          console.error('Error centering map on current location', error);
-        });
-      }
     });
   }
 }
