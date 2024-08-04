@@ -7,6 +7,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class TerrenosPage implements OnInit {
   map!: google.maps.Map;
+  marker!: google.maps.Marker;
   polygon: google.maps.Polygon | null = null;
   polygonPaths: google.maps.LatLngLiteral[] = [];
   Varea: number | null = null; // Para almacenar el área
@@ -17,12 +18,49 @@ export class TerrenosPage implements OnInit {
   }
 
   initMap() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLatLng = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          const mapOptions: google.maps.MapOptions = {
+            center: userLatLng,
+            zoom: 20,
+          };
+          this.map = new google.maps.Map(document.getElementById('map') as HTMLElement, mapOptions);
+
+          // Añadir un marcador en la ubicación actual
+          this.marker = new google.maps.Marker({
+            position: userLatLng,
+            map: this.map,
+            title: 'Dónde estoy exactamente',
+          });
+
+          // Agregar un listener para el evento de clic en el mapa
+          this.map.addListener('click', (event: google.maps.MapMouseEvent) => {
+            this.addLatLng(event.latLng);
+          });
+        },
+        (error) => {
+          console.error('Error obteniendo la ubicación', error);
+          this.loadDefaultMap();
+        }
+      );
+    } else {
+      console.error('Geolocalización no soportada por el navegador');
+      this.loadDefaultMap();
+    }
+  }
+
+  loadDefaultMap() {
     const mapOptions: google.maps.MapOptions = {
       center: { lat: -0.187442, lng: -78.501878 },
       zoom: 20,
     };
     this.map = new google.maps.Map(document.getElementById('map') as HTMLElement, mapOptions);
-    
+
     // Agregar un listener para el evento de clic en el mapa
     this.map.addListener('click', (event: google.maps.MapMouseEvent) => {
       this.addLatLng(event.latLng);
@@ -78,6 +116,4 @@ export class TerrenosPage implements OnInit {
     this.Vperimetro = null; // Restablecer el valor del perímetro
     console.log('Mapa limpiado.');
   }
-
-
 }
