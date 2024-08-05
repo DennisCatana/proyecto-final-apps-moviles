@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { FirebaseService } from 'src/app/services/firebase.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-terrenos',
@@ -10,11 +12,17 @@ export class TerrenosPage implements OnInit {
   marker!: google.maps.Marker;
   polygon: google.maps.Polygon | null = null;
   polygonPaths: google.maps.LatLngLiteral[] = [];
-  Varea: number | null = null; // Para almacenar el área
-  Vperimetro: number | null = null; // Para almacenar el perímetro
+  Varea: number | null = null;
+  Vperimetro: number | null = null;
+  users$: Observable<any[]>;
+  selectedUsers: any[] = [];
+  showUserList: boolean = false;
+
+  constructor(private firebaseService: FirebaseService) {}
 
   ngOnInit() {
     this.initMap();
+    this.users$ = this.firebaseService.getUsers();
   }
 
   initMap() {
@@ -31,14 +39,12 @@ export class TerrenosPage implements OnInit {
           };
           this.map = new google.maps.Map(document.getElementById('map') as HTMLElement, mapOptions);
 
-          // Añadir un marcador en la ubicación actual
           this.marker = new google.maps.Marker({
             position: userLatLng,
             map: this.map,
             title: 'Dónde estoy exactamente',
           });
 
-          // Agregar un listener para el evento de clic en el mapa
           this.map.addListener('click', (event: google.maps.MapMouseEvent) => {
             this.addLatLng(event.latLng);
           });
@@ -61,24 +67,32 @@ export class TerrenosPage implements OnInit {
     };
     this.map = new google.maps.Map(document.getElementById('map') as HTMLElement, mapOptions);
 
-    // Agregar un listener para el evento de clic en el mapa
     this.map.addListener('click', (event: google.maps.MapMouseEvent) => {
       this.addLatLng(event.latLng);
+    });
+  }
+
+  openUserSelection() {
+    this.showUserList = !this.showUserList;
+  }
+
+  requestLocations() {
+    this.polygonPaths = [];
+    this.selectedUsers.forEach(user => {
+      this.addLatLng(new google.maps.LatLng(user.location.lat, user.location.lng));
     });
   }
 
   addLatLng(latLng: google.maps.LatLng | null) {
     if (latLng) {
       this.polygonPaths.push(latLng.toJSON());
-
-      // Redibujar el polígono
       this.drawPolygon();
     }
   }
 
   drawPolygon() {
     if (this.polygon) {
-      this.polygon.setMap(null); // Eliminar el polígono anterior
+      this.polygon.setMap(null);
     }
 
     this.polygon = new google.maps.Polygon({
@@ -101,19 +115,28 @@ export class TerrenosPage implements OnInit {
       console.log('Perímetro: ', this.Vperimetro);
     } else {
       console.log('No hay polígono dibujado.');
-      this.Varea = null; // Restablecer valores si no hay polígono
+      this.Varea = null;
       this.Vperimetro = null;
     }
   }
 
   clearMap() {
     if (this.polygon) {
-      this.polygon.setMap(null); // Eliminar el polígono del mapa
-      this.polygon = null; // Restablecer la referencia al polígono
+      this.polygon.setMap(null);
+      this.polygon = null;
     }
-    this.polygonPaths = []; // Limpiar los caminos del polígono
-    this.Varea = null; // Restablecer el valor del área
-    this.Vperimetro = null; // Restablecer el valor del perímetro
+    this.polygonPaths = [];
+    this.Varea = null;
+    this.Vperimetro = null;
     console.log('Mapa limpiado.');
+  }
+
+  toggleUserSelection(user: any) {
+    const index = this.selectedUsers.findIndex(u => u.id === user.id);
+    if (index === -1) {
+      this.selectedUsers.push(user);
+    } else {
+      this.selectedUsers.splice(index, 1);
+    }
   }
 }

@@ -18,4 +18,14 @@
 
   <p *ngIf="Varea !== null">Área: {{ Varea | number:'1.0-2' }} m²</p>
   <p *ngIf="Vperimetro !== null">Perímetro: {{ Vperimetro | number:'1.0-2' }} m</p>
+  <ion-button color="medium" expand="full" (click)="openUserSelection()">Seleccionar Usuarios</ion-button>
+  
+ <ion-button color="medium" expand="full" (click)="openUserSelection()">Nuevo</ion-button>
+  <ion-list *ngIf="showUserList">
+    <ion-item *ngFor="let user of users$ | async">
+      <ion-label>{{ user.name }}-{{ user.rol }}</ion-label>
+      <ion-checkbox slot="start" (ionChange)="toggleUserSelection(user)"></ion-checkbox>
+    </ion-item>
+    <ion-button color="primary" expand="full" (click)="requestLocations()">Solicitar Ubicaciones</ion-button>
+  </ion-list>
 </ion-content>
