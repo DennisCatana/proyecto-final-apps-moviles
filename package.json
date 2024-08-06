@@ -33,6 +33,7 @@
     "@capacitor/status-bar": "6.0.0",
     "@ionic/angular": "^8.0.0",
     "@ionic/pwa-elements": "github:ionic-team/pwa-elements",
+    "@types/googlemaps": "^3.43.3",
     "firebase": "^10.12.4",
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
