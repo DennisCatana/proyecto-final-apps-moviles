@@ -3,6 +3,7 @@ import { GeolocationService } from 'src/app/services/geolocation.service';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Geolocation, GeolocationPosition } from '@capacitor/geolocation';
 import { Subscription } from 'rxjs';
+import { LoadingController, ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-ubicacion',
@@ -20,7 +21,9 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private geolocationService: GeolocationService,
-    private auth: AngularFireAuth
+    private auth: AngularFireAuth,
+    private loadingCtrl: LoadingController,
+    private toastCtrl: ToastController
   ) {}
 
   ngOnInit() {}
@@ -107,6 +110,10 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
           this.markerMarkers[markerData.uid] = marker;
         }
       });
+
+      const bounds = new google.maps.LatLngBounds();
+      Object.values(this.markerMarkers).forEach(marker => bounds.extend(marker.getPosition() as google.maps.LatLng));
+      this.map.fitBounds(bounds);
     });
   }
 
@@ -157,6 +164,11 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async addMarker() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Guardando marcador...'
+    });
+    await loading.present();
+
     const user = await this.auth.currentUser;
     if (user) {
       try {
@@ -182,18 +194,32 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.markerMarkers[user.uid] = marker;
         }
+
+        // Mostrar mensaje de éxito
+        this.showToast('Marcador guardado con éxito.');
       } catch (error) {
         console.error('Error getting location', error);
+      } finally {
+        await loading.dismiss();
       }
     }
   }
 
-  getCurrentPosition(): Promise<GeolocationPosition> {
-    return Geolocation.getCurrentPosition({ 
-      enableHighAccuracy: true,
-      maximumAge: 3000, // 3 segundos de caché
-      timeout: 5000 // 5 segundos de tiempo de espera
+  async getCurrentPosition(): Promise<GeolocationPosition> {
+    const loading = await this.loadingCtrl.create({
+      message: 'Obteniendo ubicación actual...'
     });
+    await loading.present();
+
+    try {
+      return await Geolocation.getCurrentPosition({ 
+        enableHighAccuracy: true,
+        maximumAge: 3000, // 3 segundos de caché
+        timeout: 10000 // 5 segundos de tiempo de espera
+      });
+    } finally {
+      await loading.dismiss();
+    }
   }
 
   async centerMapOnCurrentLocation() {
@@ -215,5 +241,14 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
     marker.addListener('click', () => {
       infoWindow.open(this.map, marker);
     });
+  }
+
+  async showToast(message: string) {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2000,
+      position: 'top'
+    });
+    toast.present();
   }
 }
