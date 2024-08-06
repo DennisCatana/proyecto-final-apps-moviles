@@ -18,6 +18,7 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
   locationSubscription: Subscription;
   markerSubscription: Subscription;
   watchId: any;
+  markers: any[] = [];
 
   constructor(
     private geolocationService: GeolocationService,
@@ -90,6 +91,7 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
   trackMarkers() {
     this.markerSubscription = this.geolocationService.getMarkers().subscribe(markers => {
+      this.markers = markers;
       markers.forEach(markerData => {
         const infoContent = `${markerData.name} (Marcador)`;
 
@@ -148,7 +150,6 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
         if (this.userMarker) {
           this.userMarker.setPosition(new google.maps.LatLng(latitude, longitude));
-          this.userMarker.setVisible(true);
         } else {
           this.userMarker = new google.maps.Marker({
             position: new google.maps.LatLng(latitude, longitude),
@@ -173,25 +174,31 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
     if (user) {
       try {
         const position = await this.getCurrentPosition();
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
-          map: this.map,
-          icon: {
-            url: './assets/icon/marcador.png',
-            scaledSize: new google.maps.Size(30, 30)
-          }
-        });
-
-        this.addInfoWindow(marker, `${user.displayName} (Marcador)`);
-
-        // Guardar el marcador en la base de datos
-        await this.geolocationService.addMarker(user.uid, position.coords.latitude, position.coords.longitude, user.displayName);
-
-        // Actualizar el marcador en el mapa
+        // Verificar si el usuario ya tiene un marcador
         if (this.markerMarkers[user.uid]) {
-          this.markerMarkers[user.uid].setPosition(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+          // Actualizar el marcador existente
+          await this.geolocationService.updateMarker(user.uid, lat, lng, user.displayName);
+          this.markerMarkers[user.uid].setPosition(new google.maps.LatLng(lat, lng));
         } else {
+          // Crear un nuevo marcador
+          const marker = new google.maps.Marker({
+            position: new google.maps.LatLng(lat, lng),
+            map: this.map,
+            icon: {
+              url: './assets/icon/marcador.png',
+              scaledSize: new google.maps.Size(30, 30)
+            }
+          });
+
+          this.addInfoWindow(marker, `${user.displayName} (Marcador)`);
+
+          // Guardar el marcador en la base de datos
+          await this.geolocationService.addMarker(user.uid, lat, lng, user.displayName);
+
+          // Actualizar el marcador en el mapa
           this.markerMarkers[user.uid] = marker;
         }
 
@@ -215,7 +222,7 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
       return await Geolocation.getCurrentPosition({ 
         enableHighAccuracy: true,
         maximumAge: 3000, // 3 segundos de caché
-        timeout: 10000 // 5 segundos de tiempo de espera
+        timeout: 10000 // 10 segundos de tiempo de espera
       });
     } finally {
       await loading.dismiss();
@@ -227,15 +234,68 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
       const position = await this.getCurrentPosition();
       const latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
       this.map.setCenter(latLng);
-      this.map.setZoom(15);
+      if (this.userMarker) {
+        this.userMarker.setPosition(latLng);
+      } else {
+        this.userMarker = new google.maps.Marker({
+          position: latLng,
+          map: this.map,
+          icon: {
+            url: './assets/icon/mi.png',
+            scaledSize: new google.maps.Size(30, 30)
+          }
+        });
+      }
     } catch (error) {
-      console.error('Error centering map on current location', error);
+      console.error('Error centering map', error);
+    }
+  }
+
+  async centerMapOnMarker(markerData: any) {
+    const latLng = new google.maps.LatLng(markerData.lat, markerData.lng);
+    this.map.setCenter(latLng);
+
+    if (this.markerMarkers[markerData.uid]) {
+      this.markerMarkers[markerData.uid].setPosition(latLng);
+    } else {
+      const marker = new google.maps.Marker({
+        position: latLng,
+        map: this.map,
+        icon: {
+          url: './assets/icon/marcador.png',
+          scaledSize: new google.maps.Size(30, 30)
+        }
+      });
+
+      this.addInfoWindow(marker, `${markerData.name} (Marcador)`);
+      this.markerMarkers[markerData.uid] = marker;
+    }
+  }
+
+  async deleteMarker(uid: string) {
+    const loading = await this.loadingCtrl.create({
+      message: 'Eliminando marcador...'
+    });
+    await loading.present();
+
+    try {
+      await this.geolocationService.deleteMarker(uid);
+      if (this.markerMarkers[uid]) {
+        this.markerMarkers[uid].setMap(null);
+        delete this.markerMarkers[uid];
+      }
+      this.showToast('Marcador eliminado con éxito.');
+    } catch (error) {
+      console.error('Error al eliminar el marcador', error);
+      this.showToast('Error al eliminar el marcador.');
+    } finally {
+      await loading.dismiss();
     }
   }
 
   addInfoWindow(marker: google.maps.Marker, content: string) {
     const infoWindow = new google.maps.InfoWindow({
-      content
+      content: content
     });
 
     marker.addListener('click', () => {
@@ -245,9 +305,8 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
 
   async showToast(message: string) {
     const toast = await this.toastCtrl.create({
-      message,
-      duration: 2000,
-      position: 'top'
+      message: message,
+      duration: 2000
     });
     toast.present();
   }
