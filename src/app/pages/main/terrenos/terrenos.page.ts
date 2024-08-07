@@ -121,4 +121,8 @@ export class TerrenosPage implements OnInit, AfterViewInit, OnDestroy {
       this.distances.push(distance / 1000); // Convert to kilometers
     }
   }
+
+  reloadPage() {
+    location.reload();
+  }
 }

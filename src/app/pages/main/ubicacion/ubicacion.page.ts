@@ -293,6 +293,11 @@ export class UbicacionPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  reloadPage() {
+    location.reload();
+  }
+
+
   addInfoWindow(marker: google.maps.Marker, content: string) {
     const infoWindow = new google.maps.InfoWindow({
       content: content
