@@ -2,6 +2,8 @@
 La aplicación permite rastrear en tiempo real la ubicación de tres dispositivos para mapear terrenos.
 A medida que se realiza el mapeo de los terrenos, la aplicación calcula automáticamente el área correspondiente a cada terreno. Esta herramienta es esencial para la gestión y planificación eficiente de espacios, facilitando la visualización y análisis de las áreas mapeadas en una interfaz amigable.
 Como herramienta de almacenamiento de datos y control de autentificacion de usa Firebase
+> [!NOTE]
+> El instable de la aplicacion se encuentra en la carpeta [apk generada](https://github.com/DennisCatana/proyecto-final-apps-moviles/tree/main/apk%20generada)
 ### Desarrollada por 
 - Dennis Cataña
 - Iveth Cocha
